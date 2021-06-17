@@ -23,7 +23,7 @@ namespace ApiWrapper.Provider
             client.BaseAddress = new Uri(API_URL);
             var json = JsonConvert.SerializeObject(payload);
             var data = new StringContent(json, Encoding.UTF8, "application/json");
-            var result =  client.PostAsync("/api/geo", data).Result;
+            var result = await client.PostAsync("/api/geo", data);
             if (result.IsSuccessStatusCode)
                 return await result.Content.ReadAsStringAsync();
             else

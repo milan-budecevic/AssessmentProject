@@ -22,12 +22,13 @@ namespace ServiceLayer.Services
         public async Task GetCoordinates()
         {
             var data = await _dataRepository.GetDataFromCsv();
+            List<PointGeoJsonData> pointGeoJsonList = new List<PointGeoJsonData>();
             data.PostalCodes.ForEach(async x =>
              {
                  var street = data.Streets.Where(s => s.PostalCodeId == x.PostalCodeId).FirstOrDefault();
-                
+
                  if (street == null)
-                      return;
+                     return;
 
                  var locality = data.Localities.Where(l => l.PostalCodeId == x.PostalCodeId).FirstOrDefault();
                  var house = data.Houses.Where(h => h.StreetId == street.StreetId).FirstOrDefault();
@@ -36,28 +37,29 @@ namespace ServiceLayer.Services
                      return;
 
                  var fullAddress = new CoordinatesRequest()
-                      {
-                          Zip = x.Zip,
-                          Locality = locality.LocalityName,
-                          Street = street.StreetName,
-                          StreetNumber = house.HouseNumber
-                      };
-                      var coordinates = await _coordinatesProvider.GetCoordinates(fullAddress);
-                      var geoJson = CreateGeoJson(new GeoData()
-                      {
-                          Zip = fullAddress.Zip,
-                          Street = fullAddress.Street,
-                          StreetNumber = fullAddress.StreetNumber,
-                          Locality = fullAddress.Locality,
-                          Latitude = coordinates.Latitude,
-                          Longitude = coordinates.Longitude
-                      });
+                 {
+                     Zip = x.Zip,
+                     Locality = locality.LocalityName,
+                     Street = street.StreetName,
+                     StreetNumber = house.HouseNumber
+                 };
+                 var coordinates = await _coordinatesProvider.GetCoordinates(fullAddress);
+                 var geoJson = await CreateGeoJson(new GeoData()
+                 {
+                     Zip = fullAddress.Zip,
+                     Street = fullAddress.Street,
+                     StreetNumber = fullAddress.StreetNumber,
+                     Locality = fullAddress.Locality,
+                     Latitude = coordinates.Latitude,
+                     Longitude = coordinates.Longitude
+                 });
 
-                 await WriteGeoJson(geoJson);
-                  
-              });
+                 pointGeoJsonList.Add(geoJson);
+
+             });
+            await WriteGeoJson(pointGeoJsonList);
         }
-        public PointGeoJsonData CreateGeoJson(GeoData geoData)
+        public async Task<PointGeoJsonData> CreateGeoJson(GeoData geoData)
         {
             var geoJson = new PointGeoJsonData()
             {
@@ -91,12 +93,14 @@ namespace ServiceLayer.Services
             geoJson.Features.Add(geoJsonFeature);
             return geoJson;
         }
-        private async Task WriteGeoJson(PointGeoJsonData poiGeoJsonData)
+        private async Task WriteGeoJson(List<PointGeoJsonData> poiGeoJsonData)
         {
-            string s = @"D:\IT-engine\GeoJson.json";
-            string json = System.Text.Json.JsonSerializer.Serialize(poiGeoJsonData);
-            using StreamWriter outputFile = File.AppendText(s);
-            await outputFile.WriteLineAsync(json);
+            string path = @"D:\IT-engine\GeoJsonFile.json";
+            using (StreamWriter outputFile = File.AppendText(path))
+            {
+                string json = System.Text.Json.JsonSerializer.Serialize(poiGeoJsonData);
+                await outputFile.WriteLineAsync(json);
+            }
         }
     }
 }

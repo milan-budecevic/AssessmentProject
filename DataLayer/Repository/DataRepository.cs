@@ -22,8 +22,8 @@ namespace DataLayer.Repository
             {
                 while (!sourceReader.EndOfStream)
                 {
-                    var line = sourceReader.ReadLineAsync();
-                    var lineElements = line.Result.Split(";");
+                    var line = await sourceReader.ReadLineAsync();
+                    var lineElements = line.Split(";");
                     if (lineElements[0] == "01")
                     {
 

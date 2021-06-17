@@ -19,9 +19,9 @@ namespace AssessmentProject
             _config = config;
             _addressService = addressService;
         }
-        public async Task Run()
+        public void Run()
         {
-            await _addressService.GetCoordinates();
+             _addressService.GetCoordinates().Wait();
         }
     }
 }
