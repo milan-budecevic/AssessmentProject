@@ -44,7 +44,7 @@ namespace ServiceLayer.Services
                      StreetNumber = house.HouseNumber
                  };
                  var coordinates = await _coordinatesProvider.GetCoordinates(fullAddress);
-                 var geoJson = await CreateGeoJson(new GeoData()
+                 var geoJson = CreateGeoJson(new GeoData()
                  {
                      Zip = fullAddress.Zip,
                      Street = fullAddress.Street,
@@ -57,9 +57,9 @@ namespace ServiceLayer.Services
                  pointGeoJsonList.Add(geoJson);
 
              });
-            await WriteGeoJson(pointGeoJsonList);
+             WriteGeoJson(pointGeoJsonList);
         }
-        public async Task<PointGeoJsonData> CreateGeoJson(GeoData geoData)
+        public PointGeoJsonData CreateGeoJson(GeoData geoData)
         {
             var geoJson = new PointGeoJsonData()
             {
@@ -93,14 +93,17 @@ namespace ServiceLayer.Services
             geoJson.Features.Add(geoJsonFeature);
             return geoJson;
         }
-        private async Task WriteGeoJson(List<PointGeoJsonData> poiGeoJsonData)
+        private void WriteGeoJson(List<PointGeoJsonData> poiGeoJsonData)
         {
-            string path = @"D:\IT-engine\GeoJsonFile.json";
-            using (StreamWriter outputFile = File.AppendText(path))
+            string s = @"C:\IT-Engine\GeoJson.json";
+            var jsonList = new List<string>();
+            poiGeoJsonData.ForEach(x =>
             {
-                string json = System.Text.Json.JsonSerializer.Serialize(poiGeoJsonData);
-                await outputFile.WriteLineAsync(json);
-            }
+                string json = System.Text.Json.JsonSerializer.Serialize(x);
+                jsonList.Add(json);
+            });
+
+            File.AppendAllLines(s, jsonList);
         }
     }
 }
